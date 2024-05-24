@@ -1,15 +1,55 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import "./index.css";
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import reportWebVitals from "./reportWebVitals";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+import { getWeaponsCount, getWeapons } from "./api/fetchCalls";
+
+import App from "./App";
+import DatasheetsPage from "./pages/dataSheetsPage";
+import HomePage from "./pages/homePage";
+
+import { WeaponsPageLoader } from "./types/datasheetTypes";
+
+export const weaponsPageLoader = async (
+  page: string
+): Promise<WeaponsPageLoader> => {
+  const pageNumber = Number(page);
+  const weaponsCount = await getWeaponsCount();
+  if (weaponsCount == null) {
+    throw Error("Weapons count is null");
+  }
+  const totalPages = Math.floor(weaponsCount / 100);
+  return { totalPages, pageNumber, weaponsCount };
+};
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    errorElement: <div>Oops, something went wrong</div>,
+    children: [
+      {
+        path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "datasheets/page/:page",
+        element: <DatasheetsPage />,
+        loader: ({ params }) => weaponsPageLoader(params.page as string),
+      },
+    ],
+  },
+]);
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 
